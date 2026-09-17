@@ -87,9 +87,11 @@
                     <h2 class="h4 fw-bold mb-1">Edit Product</h2>
                     <p class="text-muted small mb-0">Update information and images for this menu item.</p>
                 </div>
-                <a href="/product-view" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                    &larr; Back to Menu
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                        &larr; Back to Dashboard
+                    </a>
+                </div>
             </div>
 
             @if ($errors->any())
@@ -102,7 +104,7 @@
                 </div>
             @endif
 
-            <form action="/update-product/{{ $product->id }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 

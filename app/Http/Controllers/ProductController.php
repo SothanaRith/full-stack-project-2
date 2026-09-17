@@ -8,19 +8,100 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-
-    function productView()
+    /**
+     * Display the Admin Dashboard with full product management.
+     */
+    public function dashboard(Request $request)
     {
-        $products = ProductModel::all();
-        return view('productView', ['products' => $products]);
+        $search = $request->query('search');
+
+        $query = ProductModel::query()->latest();
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('tagline', 'like', "%{$search}%")
+                  ->orWhere('badge', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $query->get();
+
+        $stats = [
+            'total_products' => ProductModel::count(),
+            'avg_price' => ProductModel::avg('price') ?? 0,
+            'badges_count' => ProductModel::whereNotNull('badge')->where('badge', '!=', '')->count(),
+        ];
+
+        return view('dashboard', [
+            'products' => $products,
+            'stats' => $stats,
+            'search' => $search,
+        ]);
     }
 
-    function productFormView()
+    /**
+     * Display the customer product catalog/menu (View only).
+     */
+    public function productView(Request $request)
+    {
+        $search = $request->query('search');
+        $query = ProductModel::query()->latest();
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('tagline', 'like', "%{$search}%")
+                  ->orWhere('badge', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $query->get();
+
+        return view('productView', [
+            'products' => $products,
+            'search' => $search,
+        ]);
+    }
+
+    /**
+     * Fetch single product detail (JSON or for modal).
+     */
+    public function show($id)
+    {
+        $product = ProductModel::findOrFail($id);
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'id' => $product->id,
+                'name' => $product->name,
+                'tagline' => $product->tagline,
+                'badge' => $product->badge,
+                'price' => $product->price,
+                'currency' => $product->currency,
+                'description' => $product->description,
+                'image_url' => $product->image_url,
+                'created_at' => $product->created_at?->format('M d, Y'),
+            ]);
+        }
+
+        return view('productView', ['products' => ProductModel::all(), 'selectedProduct' => $product]);
+    }
+
+    /**
+     * Display the form to create a new product (Admin only).
+     */
+    public function productFormView()
     {
         return view('productFormView');
     }
 
-    function createProduct(Request $request)
+    /**
+     * Store a newly created product (Admin only).
+     */
+    public function createProduct(Request $request)
     {
         $validatedData = $request->validate([
             'badge' => 'nullable|string|max:50',
@@ -39,16 +120,22 @@ class ProductController extends Controller
 
         ProductModel::create($validatedData);
 
-        return redirect('/product-view');
+        return redirect()->route('dashboard')->with('success', 'Product created successfully!');
     }
 
-    function editProductView($id)
+    /**
+     * Display the edit form for a product (Admin only).
+     */
+    public function editProductView($id)
     {
         $product = ProductModel::findOrFail($id);
         return view('productEditView', ['product' => $product]);
     }
 
-    function updateProduct(Request $request, $id)
+    /**
+     * Update an existing product (Admin only).
+     */
+    public function updateProduct(Request $request, $id)
     {
         $product = ProductModel::findOrFail($id);
 
@@ -75,21 +162,20 @@ class ProductController extends Controller
 
         $product->update($validatedData);
 
-        return redirect('/product-view');
+        return redirect()->route('dashboard')->with('success', 'Product updated successfully!');
     }
 
-    function deleteProduct($id)
+    /**
+     * Delete a product (Admin only).
+     */
+    public function deleteProduct($id)
     {
         $product = ProductModel::findOrFail($id);
         if ($product->images && Storage::disk('public')->exists($product->images)) {
             Storage::disk('public')->delete($product->images);
         }
         $product->delete();
-        return redirect('/product-view');
-    }
 
-    function displaySubject(Request $request)
-    {
-        echo $request->id . "<br>" . $request->type . "<br>";
+        return redirect()->route('dashboard')->with('success', 'Product deleted successfully!');
     }
 }

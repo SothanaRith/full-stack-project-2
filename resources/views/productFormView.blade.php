@@ -70,9 +70,11 @@
                     <h2 class="h4 fw-bold mb-1">Add New Product</h2>
                     <p class="text-muted small mb-0">Fill in the details to add a coffee or snack to the menu.</p>
                 </div>
-                <a href="/product-view" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                    &larr; Back to Menu
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                        &larr; Back to Dashboard
+                    </a>
+                </div>
             </div>
 
             @if ($errors->any())

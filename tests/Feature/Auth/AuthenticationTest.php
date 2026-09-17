@@ -17,9 +17,26 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_users_can_authenticate_using_the_login_screen(): void
+    public function test_admin_redirects_to_dashboard_after_login(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => $admin->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_normal_user_redirects_to_product_view_after_login(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'user',
+        ]);
 
         $response = $this->post('/login', [
             'email' => $user->email,
@@ -27,7 +44,31 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('productView', absolute: false));
+    }
+
+    public function test_normal_user_cannot_access_admin_dashboard(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'user',
+        ]);
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        // Should be redirected back to productView with error
+        $response->assertRedirect(route('productView'));
+        $response->assertSessionHas('error');
+    }
+
+    public function test_admin_can_access_admin_dashboard(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/dashboard');
+
+        $response->assertStatus(200);
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

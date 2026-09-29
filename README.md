@@ -52,6 +52,8 @@ Set `VISITOR_ACCESS_LOG_RETENTION_DAYS` to the desired retention period. Paths, 
 
 `TRUSTED_PROXIES` must contain only the IP addresses or CIDR ranges of the reverse proxy/load balancer that actually connects to PHP. Do not enter visitor address ranges and do not use `*`. Use `TRUSTED_PROXY_HEADERS=aws-elb` for an AWS Application/Classic Load Balancer, `forwarded` only for a proxy that emits the standardized `Forwarded` header, and `x-forwarded` for Nginx and most managed hosts. If the host changes proxy ranges dynamically, update this value from the provider's documented egress ranges or use a stable proxy under your control. Leave it empty if visitors connect directly to the web server.
 
+On Railway, the application automatically detects `RAILWAY_ENVIRONMENT_ID` and uses Laravel's `REMOTE_ADDR` proxy sentinel. This trusts only the immediate Railway proxy for each request, allowing Railway's HTTPS forwarding header to set the correct scheme without enabling wildcard proxy trust. An explicitly configured `TRUSTED_PROXIES` value takes precedence.
+
 After deployment, visit the site once on Wi-Fi and once on a phone using cellular data, then open the admin log page. Compare the recorded addresses with a reputable “what is my IP” page from each connection. Browser/OS/device values are best-effort interpretations of the user-agent string; private relays, carrier NAT, VPNs, and proxies can change the visible IP, and an IP address does not identify a specific person.
 
 ## Learning Laravel

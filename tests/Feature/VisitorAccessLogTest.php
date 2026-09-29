@@ -114,6 +114,19 @@ class VisitorAccessLogTest extends TestCase
         $this->assertDatabaseHas('visitor_access_logs', ['ip_address' => '198.51.100.20']);
     }
 
+    public function test_a_trusted_dynamic_platform_proxy_honors_the_forwarded_https_scheme(): void
+    {
+        Route::get('/_test/asset-url', fn () => asset('build/app.css'))->name('test.asset-url');
+        config()->set('trusted-proxies.proxies', ['REMOTE_ADDR']);
+
+        $this->withServerVariables([
+            'REMOTE_ADDR' => '10.0.0.25',
+            'HTTP_X_FORWARDED_PROTO' => 'https',
+        ])->get('/_test/asset-url')
+            ->assertOk()
+            ->assertSeeText('https://localhost/build/app.css');
+    }
+
     public function test_cleanup_command_honors_retention(): void
     {
         VisitorAccessLog::create($this->minimalLog(['accessed_at' => now()->subDays(91)]));

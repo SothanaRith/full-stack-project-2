@@ -22,6 +22,9 @@
                         <x-nav-link :href="route('products.create')" :active="request()->routeIs('products.create')">
                             {{ __('Add Product') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('visitor-access-logs.index')" :active="request()->routeIs('visitor-access-logs.*')">
+                            {{ __('Visitor Logs') }}
+                        </x-nav-link>
                     @endif
                     <x-nav-link :href="route('productView')" :active="request()->routeIs('productView') || request()->routeIs('products.*') && !request()->routeIs('products.create') && !request()->routeIs('products.edit')">
                         {{ __('Product Menu') }}
@@ -107,6 +110,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('products.create')" :active="request()->routeIs('products.create')">
                     {{ __('Add Product') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('visitor-access-logs.index')" :active="request()->routeIs('visitor-access-logs.*')">
+                    {{ __('Visitor Logs') }}
                 </x-responsive-nav-link>
             @endif
             <x-responsive-nav-link :href="route('productView')" :active="request()->routeIs('productView')">

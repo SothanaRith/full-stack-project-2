@@ -22,6 +22,38 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
+## Visitor access logs
+
+The application records relevant HTTP visits after the response is available and queues the database insert. The admin-only page is available at `/admin/visitor-access-logs`. It stores request metadata only: it never stores request bodies, cookies, authorization headers, or query strings. Route parameters named by `VISITOR_ACCESS_LOG_REDACTED_ROUTE_PARAMETERS` are replaced with `[redacted]` before a path is stored.
+
+Deploy the schema and refresh cached configuration:
+
+```bash
+php artisan migrate --force
+php artisan optimize:clear
+php artisan config:cache
+```
+
+Keep one database queue worker running (Supervisor, systemd, or the hosting provider's worker process):
+
+```bash
+php artisan queue:work --queue=default --tries=3 --timeout=60
+```
+
+Run Laravel's scheduler every minute so retention cleanup executes daily:
+
+```cron
+* * * * * cd /absolute/path/to/cafe-shop && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Set `VISITOR_ACCESS_LOG_RETENTION_DAYS` to the desired retention period. Paths, route names, and static extensions can be excluded with the corresponding `VISITOR_ACCESS_LOG_EXCLUDED_*` environment variables in `.env.example`.
+
+### Trusted proxy configuration
+
+`TRUSTED_PROXIES` must contain only the IP addresses or CIDR ranges of the reverse proxy/load balancer that actually connects to PHP. Do not enter visitor address ranges and do not use `*`. Use `TRUSTED_PROXY_HEADERS=aws-elb` for an AWS Application/Classic Load Balancer, `forwarded` only for a proxy that emits the standardized `Forwarded` header, and `x-forwarded` for Nginx and most managed hosts. If the host changes proxy ranges dynamically, update this value from the provider's documented egress ranges or use a stable proxy under your control. Leave it empty if visitors connect directly to the web server.
+
+After deployment, visit the site once on Wi-Fi and once on a phone using cellular data, then open the admin log page. Compare the recorded addresses with a reputable “what is my IP” page from each connection. Browser/OS/device values are best-effort interpretations of the user-agent string; private relays, carrier NAT, VPNs, and proxies can change the visible IP, and an IP address does not identify a specific person.
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.

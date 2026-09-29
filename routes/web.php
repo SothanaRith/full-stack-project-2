@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\VisitorAccessLogController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -16,8 +17,10 @@ Route::get('/', function () {
         if (Auth::user()->role === 'admin') {
             return redirect()->route('dashboard');
         }
+
         return redirect()->route('productView');
     }
+
     return view('welcome');
 });
 
@@ -47,6 +50,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/edit-product/{id}', [ProductController::class, 'editProductView'])->name('products.edit');
     Route::match(['put', 'patch', 'post'], '/update-product/{id}', [ProductController::class, 'updateProduct'])->name('products.update');
     Route::delete('/delete-product/{id}', [ProductController::class, 'deleteProduct'])->name('products.destroy');
+
+    Route::get('/admin/visitor-access-logs', [VisitorAccessLogController::class, 'index'])
+        ->name('visitor-access-logs.index');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
